@@ -1,0 +1,3 @@
+iphone5 自动批量刷预约脚本
+
+使用Pyton的selenium自动化脚本库

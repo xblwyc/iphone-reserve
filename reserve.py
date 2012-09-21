@@ -100,7 +100,7 @@ class Worker(object):
 		
 if __name__ == '__main__':
 	queue = Queue()
-	f = open('test')
+	f = open('emails.txt')
 	for email in f:
 		queue.put(email)
 	# start multi-thread
