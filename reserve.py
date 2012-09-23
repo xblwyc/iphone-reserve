@@ -5,19 +5,20 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.keys import Keys
 import selenium.webdriver.remote.webdriver as wb
 import time
+import sys
 
 #global variables
-thread_num = 2
+thread_num = 20
 
 url = "https://reserve.apple.com/HK/zh_HK/reserve/iPhone"
 default_store = 'R428'
 default_product = 'MD297ZP/A'
 default_plan = 'unlockedRadioButtonC'
-default_quantity = '1'
+default_quantity = '2'
 
-default_first_name = u'超'
-default_last_name = u'王'
-default_id = '410482198809215697'
+default_first_name = u'CHUAN'
+default_last_name = u'WANG'
+default_id = 'G25192731'
 
 def order(browser, default_email):
 	browser.get(url) # Load page
@@ -94,11 +95,18 @@ class Worker(object):
 				print count,' failed ',email
 				continue
 			print count,' ',email
-			if count >= 2000 or self.queue.empty():
+			if self.queue.empty():
 				break
 		browser.close()
 		
 if __name__ == '__main__':
+	global default_first_name
+	global default_last_name
+	global default_id
+	default_first_name = sys.argv[1]
+	default_last_name = sys.argv[2]
+	default_id = sys.argv[3]
+
 	queue = Queue()
 	f = open('emails.txt')
 	for email in f:
