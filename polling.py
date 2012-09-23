@@ -4,7 +4,7 @@ import poplib
 
 # global variables
 keywords = 'apple'
-thread_num = 100
+thread_num = 10
 
 # multi-threads
 from Queue import Queue
