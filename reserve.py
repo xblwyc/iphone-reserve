@@ -8,7 +8,7 @@ import time
 import sys
 
 #global variables
-thread_num = 20
+thread_num = 1
 
 url = "https://reserve.apple.com/HK/zh_HK/reserve/iPhone"
 default_store = 'R428'
@@ -16,11 +16,11 @@ default_product = 'MD297ZP/A'
 default_plan = 'unlockedRadioButtonC'
 default_quantity = '2'
 
-default_first_name = u'CHUAN'
-default_last_name = u'WANG'
+default_first_name = u'CHAO'
+default_last_name = u'LI'
 default_id = 'G25192731'
 
-def order(browser, default_email):
+def order(browser, default_email, default_id):
 	browser.get(url) # Load page
 	# store
 	store = browser.find_element_by_id('store')
@@ -67,7 +67,14 @@ def order(browser, default_email):
 	# submit
 	submit = browser.find_element_by_xpath('//div[@id="submitButton"]/a')
 	submit.click()
-	time.sleep(3)
+	redirect = browser.find_element_by_id('quantity')
+	while redirect:
+		time.sleep(0.2)
+		try:
+			redirect = browser.find_element_by_id('quantity')
+		except Exception, e:
+			break
+		
 
 from Queue import Queue
 from threading import Lock,Thread,current_thread
@@ -87,30 +94,36 @@ class Worker(object):
 		browser = webdriver.Firefox()	# Get local session of firefox
 		count = 0
 		while True:
-			email = self.queue.get()
+			info = self.queue.get()
 			count += 1
 			try:
-				order(browser, email)
+				order(browser, info['email'],info['id_card'])
 			except Exception, e:
-				print count,' failed ',email
+				print count,' failed ',info['email'], e
 				continue
-			print count,' ',email
+			print count,' ',info['email'], ' ', info['id_card']
 			if self.queue.empty():
 				break
 		browser.close()
 		
 if __name__ == '__main__':
-	global default_first_name
-	global default_last_name
-	global default_id
-	default_first_name = sys.argv[1]
-	default_last_name = sys.argv[2]
-	default_id = sys.argv[3]
-
 	queue = Queue()
-	f = open('emails.txt')
-	for email in f:
-		queue.put(email)
+	emails = open('emails.txt')
+	id_cards = open('id_cards.txt')
+
+	email = emails.readline()
+	id_card = id_cards.readline()
+	while email and id_card:
+		info = {'email':email,'id_card':id_card}
+		queue.put(info)
+		email = emails.readline()
+		id_card = id_cards.readline()
+
+	print 'total num = %s' % queue.qsize()
 	# start multi-thread
 	Worker(thread_num,queue).start()
 	queue.join()
+
+
+
+

